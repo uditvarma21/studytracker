@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- First Container: Schedule and Timer -->
+    <div class="container" id="schedule-container">
+        <h2>Today's Schedule</h2>
+        <div id="time-interval"></div>
+        <div id="subject"></div>
+        <div id="countdown-timer"></div>
+        <div id="input-fields" style="display:none;">
+            <label for="pages-read">Pages Read:</label>
+            <input type="number" id="pages-read">
+            <label for="bookmark">Page Number Left Off:</label>
+            <input type="number" id="bookmark">
+            <button id="ok-button">OK</button>
+        </div>
+    </div>
+
+    <!-- Second Container: Subject Tracking -->
+    <div class="container" id="tracking-container">
+        <h2>Study Progress</h2>
+        <table>
+            <tr>
+                <th>Subject</th>
+                <th>Bookmark</th>
+                <th>Total Pages Read</th>
+            </tr>
+            <tr>
+                <td>Polity</td>
+                <td id="polity-bookmark"></td>
+                <td id="polity-pages"></td>
+            </tr>
+            <tr>
+                <td>Science and Tech</td>
+                <td id="science-bookmark"></td>
+                <td id="science-pages"></td>
+            </tr>
+            <tr>
+                <td>Geography</td>
+                <td id="geography-bookmark"></td>
+                <td id="geography-pages"></td>
+            </tr>
+            <tr>
+                <td>Economics</td>
+                <td id="economics-bookmark"></td>
+                <td id="economics-pages"></td>
+            </tr>
+            <tr>
+                <td>History</td>
+                <td id="history-bookmark"></td>
+                <td id="history-pages"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Third Container: Break Manager -->
+    <div class="container" id="break-manager">
+        <h2>Break Manager</h2>
+        <div id="break-timer"></div>
+        <div id="break-notification" style="display:none;">
+            <p>It's time for a break!</p>
+            <button id="break-ok-button">OK</button>
+        </div>
+    </div>
+
+    <!-- Fourth Container: Mood Tracking -->
+    <div class="container" id="mood-tracker">
+        <h2>Mood Tracker</h2>
+        <div id="mood-notification" style="display:none;">
+            <p>How are you feeling?</p>
+            <button class="mood-button" data-mood="Motivated">Motivated</button>
+            <button class="mood-button" data-mood="Depressed">Depressed</button>
+            <button class="mood-button" data-mood="Creative">Creative</button>
+            <button class="mood-button" data-mood="Lazy">Lazy</button>
+            <button class="mood-button" data-mood="Bored">Bored</button>
+            <button id="mood-ok-button">OK</button>
+        </div>
+        <table id="mood-table">
+            <tr>
+                <th>Mood</th>
+                <th>Percentage</th>
+            </tr>
+            <tr>
+                <td>Motivated</td>
+                <td id="motivated-percent"></td>
+            </tr>
+            <tr>
+                <td>Depressed</td>
+                <td id="depressed-percent"></td>
+            </tr>
+            <tr>
+                <td>Creative</td>
+                <td id="creative-percent"></td>
+            </tr>
+            <tr>
+                <td>Lazy</td>
+                <td id="lazy-percent"></td>
+            </tr>
+            <tr>
+                <td>Bored</td>
+                <td id="bored-percent"></td>
+            </tr>
+        </table>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
