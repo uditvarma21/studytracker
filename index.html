@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study Tracker</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <!-- First Container: Schedule and Timer -->
     <div class="container" id="schedule-container">
@@ -120,6 +122,33 @@
         </table>
     </div>
 
+    <!-- Fifth Container: Food Tracker -->
+    <div class="container" id="food-tracker">
+        <h2>Food Tracker</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Meal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Morning</td>
+                    <td><input type="text" id="morning-food"></td>
+                </tr>
+                <tr>
+                    <td>Afternoon</td>
+                    <td><input type="text" id="afternoon-food"></td>
+                </tr>
+                <tr>
+                    <td>Evening</td>
+                    <td><input type="text" id="evening-food"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     <script src="script.js"></script>
 </body>
+
 </html>
