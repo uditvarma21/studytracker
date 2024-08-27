@@ -18,15 +18,34 @@ function getRandomSubject() {
     return subjects[Math.floor(Math.random() * subjects.length)];
 }
 
+// Convert time string to minutes since midnight
+function timeToMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+// Get the next interval
+function getNextInterval() {
+    const now = new Date();
+    const currentTime = now.getHours() * 60 + now.getMinutes();
+
+    for (const interval of intervals) {
+        const startTime = timeToMinutes(interval.start);
+        if (currentTime < startTime) {
+            return interval;
+        }
+    }
+    // If no interval is in the future, return the first interval of the next day
+    return intervals[0];
+}
+
 // Update the interval display
 function updateInterval() {
     const now = new Date();
     const currentTime = now.getHours() * 60 + now.getMinutes();
     const currentInterval = intervals.find(interval => {
-        const [startHours, startMinutes] = interval.start.split(':').map(Number);
-        const [endHours, endMinutes] = interval.end.split(':').map(Number);
-        const startTime = startHours * 60 + startMinutes;
-        const endTime = endHours * 60 + endMinutes;
+        const startTime = timeToMinutes(interval.start);
+        const endTime = timeToMinutes(interval.end);
         return currentTime >= startTime && currentTime <= endTime;
     });
 
@@ -36,8 +55,12 @@ function updateInterval() {
         document.getElementById('interval-time').textContent = `${currentInterval.start} - ${currentInterval.end}`;
         startIntervalTimer(currentInterval);
     } else {
-        document.getElementById('current-subject').textContent = "Not in study time";
+        const nextInterval = getNextInterval();
+        document.getElementById('current-subject').textContent = "No current study session";
+        document.getElementById('interval-time').textContent = `Next Interval: ${nextInterval.start} - ${nextInterval.end}`;
         document.getElementById('timer').textContent = "00:00";
+        clearInterval(intervalTimerId);
+        document.getElementById('input-fields').style.display = 'none';
     }
 }
 
