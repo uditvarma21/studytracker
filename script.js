@@ -60,7 +60,7 @@ function updateScheduleAndTimer() {
         document.getElementById("timer").innerText = "";
         clearInterval(timerInterval);
         clearInterval(breakTimerInterval); // Clear any existing break timer
-        document.getElementById("break-timer").innerText = "";
+        document.getElementById("break-timer").innerText = "Not Study Interval"; // Show Not Study Interval
     }
 }
 
@@ -209,4 +209,4 @@ document.getElementById("evening-food").addEventListener("input", saveFoodData);
 updateScheduleAndTimer();
 setInterval(updateScheduleAndTimer, 60000); // Update every minute
 loadFoodData(); // Load food tracker data
-clearFoodDataAtMidnight(); // Schedule food data clearing at midnight
+clearFoodDataAtMidnight(); // Schedule food data clearance
