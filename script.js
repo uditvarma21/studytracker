@@ -167,6 +167,45 @@ document.getElementById("ok-button").addEventListener("click", function () {
     document.getElementById("input-fields").style.display = "none";
 });
 
+// Food Tracker Functionality
+function saveFoodData() {
+    const morningFood = document.getElementById("morning-food").value || "Nothing";
+    const afternoonFood = document.getElementById("afternoon-food").value || "Nothing";
+    const eveningFood = document.getElementById("evening-food").value || "Nothing";
+
+    localStorage.setItem("morningFood", morningFood);
+    localStorage.setItem("afternoonFood", afternoonFood);
+    localStorage.setItem("eveningFood", eveningFood);
+}
+
+function loadFoodData() {
+    document.getElementById("morning-food").value = localStorage.getItem("morningFood") || "";
+    document.getElementById("afternoon-food").value = localStorage.getItem("afternoonFood") || "";
+    document.getElementById("evening-food").value = localStorage.getItem("eveningFood") || "";
+}
+
+function clearFoodDataAtMidnight() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0); // Set to next midnight
+
+    const timeUntilMidnight = midnight - now;
+    setTimeout(() => {
+        localStorage.removeItem("morningFood");
+        localStorage.removeItem("afternoonFood");
+        localStorage.removeItem("eveningFood");
+
+        loadFoodData(); // Refresh inputs
+        clearFoodDataAtMidnight(); // Schedule for next day
+    }, timeUntilMidnight);
+}
+
+document.getElementById("morning-food").addEventListener("input", saveFoodData);
+document.getElementById("afternoon-food").addEventListener("input", saveFoodData);
+document.getElementById("evening-food").addEventListener("input", saveFoodData);
+
 // Initialize
 updateScheduleAndTimer();
-setInterval(updateScheduleAndTimer, 60000);  // Update every minute
+setInterval(updateScheduleAndTimer, 60000); // Update every minute
+loadFoodData(); // Load food tracker data
+clearFoodDataAtMidnight(); // Schedule food data clearing at midnight
