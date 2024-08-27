@@ -1,170 +1,135 @@
-// Define study intervals and subjects
-const intervals = [
-    { start: "11:30", end: "13:30" },
-    { start: "14:30", end: "16:30" },
-    { start: "17:30", end: "19:30" },
-    { start: "21:00", end: "23:00" }
-];
+// Subject and time interval setup
 const subjects = ['Polity', 'Science and Tech', 'Geography', 'Economics', 'History'];
-const breakInterval = 25 * 60; // 25 minutes in seconds
-const breakDuration = 5 * 60; // 5 minutes in seconds
-let currentSubject = '';
-let moodCounts = { Motivated: 0, Depressed: 0, Creative: 0, Lazy: 0, Bored: 0 };
-let totalMoodClicks = 0;
-let breakTimerId, intervalTimerId;
+const intervals = [
+    { start: '04:45 AM', end: '05:00 AM', subject: 'Cold Shower' },
+    { start: '05:30 AM', end: '07:00 AM', subject: 'Newspaper' },
+    { start: '11:30 AM', end: '01:30 PM' },
+    { start: '02:30 PM', end: '04:30 PM' },
+    { start: '05:30 PM', end: '07:30 PM' },
+    { start: '09:00 PM', end: '11:00 PM' }
+];
 
-// Randomize subjects for each interval
-function getRandomSubject() {
-    return subjects[Math.floor(Math.random() * subjects.length)];
-}
+let currentInterval = null;
+let totalPagesToday = 0;
 
-// Convert time string to minutes since midnight
-function timeToMinutes(time) {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-}
-
-// Get the next interval
-function getNextInterval() {
+function updateSchedule() {
     const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
+    let foundInterval = false;
 
-    for (const interval of intervals) {
-        const startTime = timeToMinutes(interval.start);
-        if (currentTime < startTime) {
-            return interval;
+    intervals.forEach(interval => {
+        const [startHour, startMin] = interval.start.split(/[: ]/);
+        const [endHour, endMin] = interval.end.split(/[: ]/);
+
+        const startDate = new Date(now);
+        startDate.setHours(parseInt(startHour) % 12 + (interval.start.includes('PM') ? 12 : 0), parseInt(startMin));
+
+        const endDate = new Date(now);
+        endDate.setHours(parseInt(endHour) % 12 + (interval.end.includes('PM') ? 12 : 0), parseInt(endMin));
+
+        if (now >= startDate && now <= endDate) {
+            currentInterval = interval;
+            foundInterval = true;
+
+            document.getElementById('interval-time').textContent = `${interval.start} - ${interval.end}`;
+            document.getElementById('current-subject').textContent = interval.subject || subjects[Math.floor(Math.random() * subjects.length)];
+
+            startTimer(endDate);
+            return;
         }
-    }
-    // If no interval is in the future, return the first interval of the next day
-    return intervals[0];
-}
-
-// Update the interval display
-function updateInterval() {
-    const now = new Date();
-    const currentTime = now.getHours() * 60 + now.getMinutes();
-    const currentInterval = intervals.find(interval => {
-        const startTime = timeToMinutes(interval.start);
-        const endTime = timeToMinutes(interval.end);
-        return currentTime >= startTime && currentTime <= endTime;
     });
 
-    if (currentInterval) {
-        currentSubject = getRandomSubject();
-        document.getElementById('current-subject').textContent = currentSubject;
-        document.getElementById('interval-time').textContent = `${currentInterval.start} - ${currentInterval.end}`;
-        startIntervalTimer(currentInterval);
-    } else {
-        const nextInterval = getNextInterval();
-        document.getElementById('current-subject').textContent = "No current study session";
-        document.getElementById('interval-time').textContent = `Next Interval: ${nextInterval.start} - ${nextInterval.end}`;
-        document.getElementById('timer').textContent = "00:00";
-        clearInterval(intervalTimerId);
-        document.getElementById('input-fields').style.display = 'none';
+    if (!foundInterval) {
+        const nextInterval = intervals.find(interval => {
+            const [startHour, startMin] = interval.start.split(/[: ]/);
+            const startDate = new Date(now);
+            startDate.setHours(parseInt(startHour) % 12 + (interval.start.includes('PM') ? 12 : 0), parseInt(startMin));
+            return now < startDate;
+        });
+
+        if (nextInterval) {
+            document.getElementById('interval-time').textContent = `Next Interval: ${nextInterval.start} - ${nextInterval.end}`;
+            document.getElementById('current-subject').textContent = '';
+            document.getElementById('timer').textContent = '';
+        }
     }
 }
 
-// Start interval timer
-function startIntervalTimer(interval) {
-    const [startHours, startMinutes] = interval.start.split(':').map(Number);
-    const [endHours, endMinutes] = interval.end.split(':').map(Number);
-    const startTime = new Date();
-    startTime.setHours(startHours, startMinutes, 0, 0);
-    const endTime = new Date();
-    endTime.setHours(endHours, endMinutes, 0, 0);
-    const duration = (endTime - startTime) / 1000; // Duration in seconds
+function startTimer(endTime) {
+    const timerInterval = setInterval(() => {
+        const now = new Date();
+        const timeRemaining = Math.max(0, endTime - now);
 
-    let timer = duration;
-    clearInterval(intervalTimerId);
-    intervalTimerId = setInterval(() => {
-        const minutes = Math.floor(timer / 60);
-        const seconds = Math.floor(timer % 60);
-        document.getElementById('timer').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        
-        if (timer <= 0) {
-            clearInterval(intervalTimerId);
+        const minutes = Math.floor(timeRemaining / 60000);
+        const seconds = Math.floor((timeRemaining % 60000) / 1000);
+        document.getElementById('timer').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (timeRemaining <= 0) {
+            clearInterval(timerInterval);
             document.getElementById('input-fields').style.display = 'block';
-        } else {
-            timer--;
         }
     }, 1000);
 }
 
-// Handle OK button click
-document.getElementById('ok-button').addEventListener('click', () => {
-    const pagesRead = Number(document.getElementById('pages-read').value);
-    const bookmark = Number(document.getElementById('bookmark').value);
-    updateStudyProgress(currentSubject, pagesRead, bookmark);
+// Accumulate total pages read today
+document.getElementById('ok-button').addEventListener('click', function() {
+    const pages = parseInt(document.getElementById('pages-read').value);
+    const bookmark = parseInt(document.getElementById('bookmark').value);
+    const subject = document.getElementById('current-subject').textContent;
+
+    if (!isNaN(pages) && !isNaN(bookmark)) {
+        const pagesElement = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-pages`);
+        pagesElement.textContent = parseInt(pagesElement.textContent || '0') + pages;
+
+        const bookmarkElement = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-bookmark`);
+        bookmarkElement.textContent = bookmark;
+
+        totalPagesToday += pages;
+        updateTotalPagesRow();
+    }
+
     document.getElementById('input-fields').style.display = 'none';
-    startBreakManager();
 });
 
-// Update study progress
-function updateStudyProgress(subject, pagesRead, bookmark) {
-    const pagesId = `${subject.toLowerCase().replace(/ /g, '-')}-pages`;
-    const bookmarkId = `${subject.toLowerCase().replace(/ /g, '-')}-bookmark`;
-    const pagesElem = document.getElementById(pagesId);
-    const bookmarkElem = document.getElementById(bookmarkId);
+// Function to update or create the total pages row
+function updateTotalPagesRow() {
+    let totalRow = document.getElementById('total-pages-today');
 
-    const currentPages = Number(pagesElem.textContent) || 0;
-    const currentBookmark = Number(bookmarkElem.textContent) || 0;
+    if (!totalRow) {
+        const tbody = document.querySelector('#tracking-container tbody');
+        totalRow = document.createElement('tr');
+        totalRow.id = 'total-pages-today';
 
-    pagesElem.textContent = currentPages + pagesRead;
-    bookmarkElem.textContent = bookmark;
-}
+        const totalLabelCell = document.createElement('td');
+        totalLabelCell.textContent = 'Total Pages Today';
+        totalLabelCell.colSpan = 2;
 
-// Start break manager
-function startBreakManager() {
-    let timer = breakInterval;
-    clearInterval(breakTimerId);
-    breakTimerId = setInterval(() => {
-        const minutes = Math.floor(timer / 60);
-        const seconds = Math.floor(timer % 60);
-        document.getElementById('break-time').textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        const totalPagesCell = document.createElement('td');
+        totalPagesCell.textContent = totalPagesToday;
 
-        if (timer <= 0) {
-            clearInterval(breakTimerId);
-            document.getElementById('break-notification').style.display = 'block';
-        } else {
-            timer--;
-        }
-    }, 1000);
-}
+        totalRow.appendChild(totalLabelCell);
+        totalRow.appendChild(totalPagesCell);
 
-// Handle break OK button click
-document.getElementById('break-ok-button').addEventListener('click', () => {
-    document.getElementById('break-notification').style.display = 'none';
-    showMoodNotification();
-});
-
-// Show mood notification
-function showMoodNotification() {
-    document.getElementById('mood-notification').style.display = 'block';
-}
-
-// Mood button handlers
-document.querySelectorAll('#mood-tracker .mood-button').forEach(button => {
-    button.addEventListener('click', (event) => {
-        const mood = event.target.dataset.mood;
-        moodCounts[mood]++;
-        totalMoodClicks++;
-        updateMoodSummary();
-    });
-});
-
-// Handle mood OK button click
-document.getElementById('mood-ok-button').addEventListener('click', () => {
-    document.getElementById('mood-notification').style.display = 'none';
-});
-
-// Update mood summary
-function updateMoodSummary() {
-    for (let mood in moodCounts) {
-        const percentage = totalMoodClicks === 0 ? 0 : (moodCounts[mood] / totalMoodClicks) * 100;
-        document.getElementById(`${mood.toLowerCase()}-percent`).textContent = `${percentage.toFixed(2)}%`;
+        tbody.appendChild(totalRow);
+    } else {
+        totalRow.querySelector('td:last-child').textContent = totalPagesToday;
     }
 }
 
-// Initial setup
-updateInterval();
-setInterval(updateInterval, 60000); // Check every minute for updates
+// Reset total pages read today at midnight
+function resetTotalPagesToday() {
+    const now = new Date();
+    const millisTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
+
+    setTimeout(() => {
+        totalPagesToday = 0;
+        updateTotalPagesRow();  // Update the row with the reset value
+        resetTotalPagesToday();  // Set the timeout again for the next day
+    }, millisTillMidnight);
+}
+
+// Initialize the reset function
+resetTotalPagesToday();
+
+// Start the schedule updater
+setInterval(updateSchedule, 60000);
+updateSchedule();
