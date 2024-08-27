@@ -38,7 +38,7 @@ label {
     margin-top: 10px;
 }
 
-input[type="number"] {
+input[type="number"], input[type="text"] {
     width: calc(100% - 20px);
     padding: 8px;
     margin: 5px 0;
@@ -76,7 +76,7 @@ th {
     background-color: #f2f2f2;
 }
 
-#break-timer {
+#break-timer, #break-left-timer {
     font-size: 2em;
     color: #d9534f;
     font-weight: bold;
@@ -101,7 +101,23 @@ th {
         font-size: 1.2em;
     }
 
-    #break-timer {
+    #break-timer, #break-left-timer {
         font-size: 1.5em;
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    table, th, td {
+        font-size: 0.9em;
+    }
+
+    input[type="number"], input[type="text"] {
+        width: 100%;
+    }
+
+    button {
+        padding: 8px 12px;
     }
 }
