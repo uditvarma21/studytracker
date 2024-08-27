@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Study and Food Tracker</title>
+    <title>Study Tracker</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
     <!-- First Container: Schedule and Timer -->
     <div class="container" id="schedule-container">
@@ -62,14 +60,14 @@
                     <td id="history-pages"></td>
                 </tr>
                 <tr>
-                    <td colspan="2">Total Pages Read Today</td>
-                    <td id="total-pages-today"></td>
+                    <td>Total Pages Today</td>
+                    <td colspan="2" id="total-pages-today"></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <!-- Third Container: Break Manager and Mood Tracker -->
+    <!-- Third Container: Break Manager -->
     <div class="container" id="break-manager">
         <h2>Break Manager</h2>
         <div id="break-timer">Next Break: <span id="break-time">25:00</span></div>
@@ -77,6 +75,11 @@
             <p>It's time for a break!</p>
             <button id="break-ok-button">OK</button>
         </div>
+    </div>
+
+    <!-- Fourth Container: Mood Tracker -->
+    <div class="container" id="mood-tracker">
+        <h2>Mood Tracker</h2>
         <div id="mood-notification" style="display:none;">
             <p>How are you feeling?</p>
             <button class="mood-button" data-mood="Motivated">Motivated</button>
@@ -117,28 +120,6 @@
         </table>
     </div>
 
-    <!-- Fourth Container: Food Tracker -->
-    <div class="container" id="food-tracker">
-        <h2>Food Tracker</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Morning</th>
-                    <th>Afternoon</th>
-                    <th>Evening</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><input type="text" id="food-morning" placeholder="Nothing"></td>
-                    <td><input type="text" id="food-afternoon" placeholder="Nothing"></td>
-                    <td><input type="text" id="food-evening" placeholder="Nothing"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
     <script src="script.js"></script>
 </body>
-
 </html>
