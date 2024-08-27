@@ -84,7 +84,6 @@ function startIntervalTimer(interval) {
         if (timer <= 0) {
             clearInterval(intervalTimerId);
             document.getElementById('input-fields').style.display = 'block';
-            document.getElementById('break-notification').style.display = 'none';
         } else {
             timer--;
         }
@@ -168,3 +167,4 @@ function updateMoodSummary() {
 
 // Initial setup
 updateInterval();
+setInterval(updateInterval, 60000); // Check every minute for updates
