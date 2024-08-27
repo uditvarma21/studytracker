@@ -1,135 +1,122 @@
-// Subject and time interval setup
 const subjects = ['Polity', 'Science and Tech', 'Geography', 'Economics', 'History'];
-const intervals = [
-    { start: '04:45 AM', end: '05:00 AM', subject: 'Cold Shower' },
-    { start: '05:30 AM', end: '07:00 AM', subject: 'Newspaper' },
-    { start: '11:30 AM', end: '01:30 PM' },
-    { start: '02:30 PM', end: '04:30 PM' },
-    { start: '05:30 PM', end: '07:30 PM' },
-    { start: '09:00 PM', end: '11:00 PM' }
+const studyIntervals = [
+    { start: "11:30 AM", end: "1:30 PM" },
+    { start: "2:30 PM", end: "4:30 PM" },
+    { start: "5:30 PM", end: "7:30 PM" },
+    { start: "9:00 PM", end: "11:00 PM" }
 ];
-
-let currentInterval = null;
+let currentIntervalIndex = -1;
+let currentSubject = '';
 let totalPagesToday = 0;
+let breakTime = 25 * 60; // 25 minutes in seconds
+let breakIntervalId;
+let studyIntervalStarted = false;
+let breakOngoing = false;
 
+// Initialize the schedule
 function updateSchedule() {
     const now = new Date();
-    let foundInterval = false;
+    let isInterval = false;
 
-    intervals.forEach(interval => {
-        const [startHour, startMin] = interval.start.split(/[: ]/);
-        const [endHour, endMin] = interval.end.split(/[: ]/);
+    // Check if we are in a study interval
+    for (let i = 0; i < studyIntervals.length; i++) {
+        const intervalStart = new Date(`${now.toDateString()} ${studyIntervals[i].start}`);
+        const intervalEnd = new Date(`${now.toDateString()} ${studyIntervals[i].end}`);
 
-        const startDate = new Date(now);
-        startDate.setHours(parseInt(startHour) % 12 + (interval.start.includes('PM') ? 12 : 0), parseInt(startMin));
-
-        const endDate = new Date(now);
-        endDate.setHours(parseInt(endHour) % 12 + (interval.end.includes('PM') ? 12 : 0), parseInt(endMin));
-
-        if (now >= startDate && now <= endDate) {
-            currentInterval = interval;
-            foundInterval = true;
-
-            document.getElementById('interval-time').textContent = `${interval.start} - ${interval.end}`;
-            document.getElementById('current-subject').textContent = interval.subject || subjects[Math.floor(Math.random() * subjects.length)];
-
-            startTimer(endDate);
-            return;
+        if (now >= intervalStart && now <= intervalEnd) {
+            currentIntervalIndex = i;
+            currentSubject = subjects[i];
+            document.getElementById('current-subject').textContent = currentSubject;
+            studyIntervalStarted = true;
+            updateBreakTimer(); // Start the break timer
+            break;
+        } else {
+            studyIntervalStarted = false;
         }
-    });
+    }
 
-    if (!foundInterval) {
-        const nextInterval = intervals.find(interval => {
-            const [startHour, startMin] = interval.start.split(/[: ]/);
-            const startDate = new Date(now);
-            startDate.setHours(parseInt(startHour) % 12 + (interval.start.includes('PM') ? 12 : 0), parseInt(startMin));
-            return now < startDate;
-        });
-
-        if (nextInterval) {
-            document.getElementById('interval-time').textContent = `Next Interval: ${nextInterval.start} - ${nextInterval.end}`;
-            document.getElementById('current-subject').textContent = '';
-            document.getElementById('timer').textContent = '';
-        }
+    if (studyIntervalStarted) {
+        const intervalEnd = new Date(`${now.toDateString()} ${studyIntervals[currentIntervalIndex].end}`);
+        const timeLeft = intervalEnd - now;
+        const minutesLeft = Math.floor(timeLeft / 60000);
+        const secondsLeft = Math.floor((timeLeft % 60000) / 1000);
+        document.getElementById('timer').textContent = `${minutesLeft}:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`;
+        document.getElementById('input-fields').style.display = 'none';
+    } else {
+        document.getElementById('timer').textContent = '';
+        document.getElementById('input-fields').style.display = 'block';
     }
 }
 
-function startTimer(endTime) {
-    const timerInterval = setInterval(() => {
-        const now = new Date();
-        const timeRemaining = Math.max(0, endTime - now);
+// Function to handle input submission
+document.getElementById('ok-button').addEventListener('click', () => {
+    const pagesRead = parseInt(document.getElementById('pages-read').value) || 0;
+    const bookmark = parseInt(document.getElementById('bookmark').value) || 0;
 
-        const minutes = Math.floor(timeRemaining / 60000);
-        const seconds = Math.floor((timeRemaining % 60000) / 1000);
-        document.getElementById('timer').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+    totalPagesToday += pagesRead;
 
-        if (timeRemaining <= 0) {
-            clearInterval(timerInterval);
-            document.getElementById('input-fields').style.display = 'block';
+    document.getElementById(`${currentSubject.toLowerCase().replace(/ /g, '-')}-pages`).textContent =
+        (parseInt(document.getElementById(`${currentSubject.toLowerCase().replace(/ /g, '-')}-pages`).textContent) || 0) + pagesRead;
+    document.getElementById(`${currentSubject.toLowerCase().replace(/ /g, '-')}-bookmark`).textContent = bookmark;
+
+    updateTotalPagesRow();
+
+    // Clear input fields
+    document.getElementById('pages-read').value = '';
+    document.getElementById('bookmark').value = '';
+});
+
+// Function to update the "Total Pages Today" row
+function updateTotalPagesRow() {
+    document.getElementById('total-pages-cell').textContent = totalPagesToday;
+}
+
+// Break Timer
+function updateBreakTimer() {
+    if (!studyIntervalStarted) {
+        document.getElementById('break-status').textContent = 'Not Study Interval';
+        document.getElementById('break-time').textContent = '25:00';
+        clearInterval(breakIntervalId);
+        breakTime = 25 * 60;
+        return;
+    }
+
+    document.getElementById('break-status').textContent = breakOngoing ? 'Break Left:' : 'Next Break:';
+    breakIntervalId = setInterval(() => {
+        if (!studyIntervalStarted) {
+            clearInterval(breakIntervalId);
+            return;
+        }
+
+        const minutes = Math.floor(breakTime / 60);
+        const seconds = breakTime % 60;
+        document.getElementById('break-time').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        if (breakTime > 0) {
+            breakTime--;
+        } else {
+            clearInterval(breakIntervalId);
+            if (breakOngoing) {
+                breakOngoing = false;
+                breakTime = 25 * 60;
+                updateSchedule();
+            } else {
+                breakOngoing = true;
+                breakTime = 5 * 60;
+                document.getElementById('break-notification').style.display = 'block';
+                document.getElementById('mood-notification').style.display = 'block';
+                updateBreakTimer();
+            }
         }
     }, 1000);
 }
 
-// Accumulate total pages read today
-document.getElementById('ok-button').addEventListener('click', function() {
-    const pages = parseInt(document.getElementById('pages-read').value);
-    const bookmark = parseInt(document.getElementById('bookmark').value);
-    const subject = document.getElementById('current-subject').textContent;
-
-    if (!isNaN(pages) && !isNaN(bookmark)) {
-        const pagesElement = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-pages`);
-        pagesElement.textContent = parseInt(pagesElement.textContent || '0') + pages;
-
-        const bookmarkElement = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-bookmark`);
-        bookmarkElement.textContent = bookmark;
-
-        totalPagesToday += pages;
-        updateTotalPagesRow();
-    }
-
-    document.getElementById('input-fields').style.display = 'none';
+document.getElementById('break-ok-button').addEventListener('click', () => {
+    document.getElementById('break-notification').style.display = 'none';
+    document.getElementById('mood-notification').style.display = 'none';
+    updateBreakTimer();
 });
 
-// Function to update or create the total pages row
-function updateTotalPagesRow() {
-    let totalRow = document.getElementById('total-pages-today');
-
-    if (!totalRow) {
-        const tbody = document.querySelector('#tracking-container tbody');
-        totalRow = document.createElement('tr');
-        totalRow.id = 'total-pages-today';
-
-        const totalLabelCell = document.createElement('td');
-        totalLabelCell.textContent = 'Total Pages Today';
-        totalLabelCell.colSpan = 2;
-
-        const totalPagesCell = document.createElement('td');
-        totalPagesCell.textContent = totalPagesToday;
-
-        totalRow.appendChild(totalLabelCell);
-        totalRow.appendChild(totalPagesCell);
-
-        tbody.appendChild(totalRow);
-    } else {
-        totalRow.querySelector('td:last-child').textContent = totalPagesToday;
-    }
-}
-
-// Reset total pages read today at midnight
-function resetTotalPagesToday() {
-    const now = new Date();
-    const millisTillMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0) - now;
-
-    setTimeout(() => {
-        totalPagesToday = 0;
-        updateTotalPagesRow();  // Update the row with the reset value
-        resetTotalPagesToday();  // Set the timeout again for the next day
-    }, millisTillMidnight);
-}
-
-// Initialize the reset function
-resetTotalPagesToday();
-
-// Start the schedule updater
-setInterval(updateSchedule, 60000);
+// Initialize everything
 updateSchedule();
+setInterval(updateSchedule, 1000);
