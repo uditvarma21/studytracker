@@ -10,9 +10,8 @@ const intervals = [
 ];
 
 let currentInterval = null;
-let intervalIndex = 0;
-let totalMinutes = 1440;
 let timerInterval;
+let breakTimerInterval;
 
 // Helper function to format time
 function formatTime(minutes) {
@@ -40,6 +39,7 @@ function updateScheduleAndTimer() {
 
         // Start the countdown timer
         clearInterval(timerInterval);
+        clearInterval(breakTimerInterval); // Clear any existing break timer
         timerInterval = setInterval(() => {
             const now = new Date();
             const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
@@ -55,15 +55,16 @@ function updateScheduleAndTimer() {
         }, 1000);
 
     } else {
+        // Not a study interval
         document.getElementById("current-subject").innerText = "Not Study Interval";
         document.getElementById("timer").innerText = "";
         clearInterval(timerInterval);
+        clearInterval(breakTimerInterval); // Clear any existing break timer
+        document.getElementById("break-timer").innerText = "";
     }
 }
 
 // Break Timer Setup
-let breakTimerInterval;
-
 function showBreakNotification() {
     document.getElementById("break-notification").style.display = "block";
     clearInterval(breakTimerInterval);
