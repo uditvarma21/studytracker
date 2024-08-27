@@ -59,9 +59,9 @@
                     <td id="history-bookmark"></td>
                     <td id="history-pages"></td>
                 </tr>
-                <tr id="total-pages-today">
-                    <td colspan="2">Total Pages Today</td>
-                    <td id="total-pages-cell">0</td>
+                <tr>
+                    <td>Total Pages Today</td>
+                    <td colspan="2" id="total-pages-today">0</td>
                 </tr>
             </tbody>
         </table>
@@ -70,19 +70,11 @@
     <!-- Third Container: Break Manager -->
     <div class="container" id="break-manager">
         <h2>Break Manager</h2>
-        <div id="break-timer">
-            <span id="break-status">Next Break:</span> 
-            <span id="break-time">25:00</span>
-        </div>
+        <div id="break-timer">Next Break: <span id="break-time"></span></div>
         <div id="break-notification" style="display:none;">
             <p>It's time for a break!</p>
             <button id="break-ok-button">OK</button>
         </div>
-    </div>
-
-    <!-- Fourth Container: Mood Tracking -->
-    <div class="container" id="mood-tracker">
-        <h2>Mood Tracker</h2>
         <div id="mood-notification" style="display:none;">
             <p>How are you feeling?</p>
             <button class="mood-button" data-mood="Motivated">Motivated</button>
@@ -90,7 +82,6 @@
             <button class="mood-button" data-mood="Creative">Creative</button>
             <button class="mood-button" data-mood="Lazy">Lazy</button>
             <button class="mood-button" data-mood="Bored">Bored</button>
-            <button id="mood-ok-button">OK</button>
         </div>
         <table id="mood-table">
             <thead>
