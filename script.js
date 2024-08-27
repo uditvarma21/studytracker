@@ -1,170 +1,182 @@
-document.addEventListener("DOMContentLoaded", function () {
-    // Constants for subjects and time intervals
-    const subjects = ["Polity", "Science and Tech", "Geography", "Economics", "History"];
-    const timeIntervals = [
-        { subject: "Polity", time: 60 },
-        { subject: "Science and Tech", time: 120 },
-        { subject: "Geography", time: 180 },
-        { subject: "Economics", time: 240 },
-        { subject: "History", time: 300 },
+document.addEventListener('DOMContentLoaded', function () {
+    const subjects = ['Polity', 'Science and Tech', 'Geography', 'Economics', 'History'];
+    const intervals = [
+        { start: '11:30 AM', end: '1:30 PM' },
+        { start: '2:30 PM', end: '4:30 PM' },
+        { start: '5:30 PM', end: '7:30 PM' },
+        { start: '9:00 PM', end: '11:00 PM' }
     ];
 
-    // Variables to keep track of state
-    let currentIntervalIndex = 0;
-    let breakInterval, studyInterval, breakTimer, totalStudyMinutes = 0;
+    let currentInterval = null;
+    let timerInterval = null;
+    let breakTimerInterval = null;
+    let breakLeftTimerInterval = null;
 
-    const intervalTimeSpan = document.getElementById("interval-time");
-    const currentSubjectSpan = document.getElementById("current-subject");
-    const timerSpan = document.getElementById("timer");
-    const breakTimeSpan = document.getElementById("break-time");
-    const breakNotificationDiv = document.getElementById("break-notification");
-    const moodNotificationDiv = document.getElementById("mood-notification");
-    const totalPagesToday = document.getElementById("total-pages-today");
+    const randomizedSubjects = shuffleArray(subjects);
 
-    const pagesReadInput = document.getElementById("pages-read");
-    const bookmarkInput = document.getElementById("bookmark");
-    const okButton = document.getElementById("ok-button");
-
-    const foodMorningInput = document.getElementById("food-morning");
-    const foodAfternoonInput = document.getElementById("food-afternoon");
-    const foodEveningInput = document.getElementById("food-evening");
-
-    let moodCounts = { Motivated: 0, Depressed: 0, Creative: 0, Lazy: 0, Bored: 0 };
-    let totalMoodClicks = 0;
-
-    // Initialize the schedule
-    function initializeSchedule() {
-        const currentInterval = timeIntervals[currentIntervalIndex];
-        intervalTimeSpan.textContent = formatTime(currentInterval.time);
-        currentSubjectSpan.textContent = currentInterval.subject;
-        startStudyTimer(currentInterval.time * 60); // Convert minutes to seconds
-    }
-
-    // Start the study timer
-    function startStudyTimer(duration) {
-        let timer = duration;
-        studyInterval = setInterval(function () {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            timerSpan.textContent = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-            if (--timer < 0) {
-                clearInterval(studyInterval);
-                showBreakNotification();
-            }
-        }, 1000);
-    }
-
-    // Show break notification
-    function showBreakNotification() {
-        breakNotificationDiv.style.display = "block";
-    }
-
-    // Handle Break OK button click
-    document.getElementById("break-ok-button").addEventListener("click", function () {
-        breakNotificationDiv.style.display = "none";
-        moodNotificationDiv.style.display = "block";
-        startBreakTimer(5 * 60); // 5 minutes break in seconds
-    });
-
-    // Start break timer
-    function startBreakTimer(duration) {
-        breakTimeSpan.textContent = "Break Left: ";
-        let timer = duration;
-        breakInterval = setInterval(function () {
-            const minutes = Math.floor(timer / 60);
-            const seconds = timer % 60;
-            breakTimeSpan.textContent = `${minutes}:${seconds < 10 ? "0" + seconds : seconds}`;
-            if (--timer < 0) {
-                clearInterval(breakInterval);
-                moveToNextInterval();
-            }
-        }, 1000);
-    }
-
-    // Move to the next interval or reset for the next day
-    function moveToNextInterval() {
-        currentIntervalIndex++;
-        if (currentIntervalIndex >= timeIntervals.length) {
-            // Reset for the next day
-            currentIntervalIndex = 0;
-            totalStudyMinutes = 0;
-            // Reset mood counts for the day
-            Object.keys(moodCounts).forEach(mood => {
-                moodCounts[mood] = 0;
-                document.getElementById(`${mood.toLowerCase()}-percent`).textContent = "0%";
-            });
-            totalMoodClicks = 0;
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
-        initializeSchedule();
+        return array;
     }
 
-    // Format time in HH:MM format
-    function formatTime(minutes) {
-        const hours = Math.floor(minutes / 60);
-        const mins = minutes % 60;
-        return `${hours}:${mins < 10 ? "0" + mins : mins}`;
+    function calculateTimeLeft(endTime) {
+        const now = new Date();
+        const end = new Date();
+        const [hours, minutes] = endTime.split(':').map(Number);
+        end.setHours(hours, minutes, 0, 0);
+        const diff = end - now;
+        return diff > 0 ? diff : 0;
     }
 
-    // Handle OK button click to save progress
-    okButton.addEventListener("click", function () {
-        const pagesRead = parseInt(pagesReadInput.value) || 0;
-        const bookmark = parseInt(bookmarkInput.value) || 0;
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
 
-        const currentSubject = subjects[currentIntervalIndex];
-        const currentPages = document.getElementById(`${currentSubject.toLowerCase()}-pages`);
-        const currentBookmark = document.getElementById(`${currentSubject.toLowerCase()}-bookmark`);
+    function startInterval(index) {
+        const interval = intervals[index];
+        const timeLeft = calculateTimeLeft(interval.end);
+        if (timeLeft > 0) {
+            document.getElementById('interval-time').textContent = `${interval.start} - ${interval.end}`;
+            document.getElementById('current-subject').textContent = randomizedSubjects[index];
+            document.getElementById('timer').textContent = formatTime(timeLeft);
 
-        const newTotalPages = (parseInt(currentPages.textContent) || 0) + pagesRead;
-        currentPages.textContent = newTotalPages;
-        currentBookmark.textContent = bookmark;
+            timerInterval = setInterval(() => {
+                const timeLeft = calculateTimeLeft(interval.end);
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById('timer').textContent = '00:00';
+                    showInputFields();
+                } else {
+                    document.getElementById('timer').textContent = formatTime(timeLeft);
+                }
+            }, 1000);
+        } else {
+            document.getElementById('interval-time').textContent = 'Not Study Interval';
+            document.getElementById('timer').textContent = '00:00';
+        }
+    }
 
-        totalStudyMinutes += pagesRead;
-        totalPagesToday.textContent = totalStudyMinutes;
-
-        pagesReadInput.value = "";
-        bookmarkInput.value = "";
-    });
-
-    // Handle Mood button clicks
-    document.querySelectorAll(".mood-button").forEach(button => {
-        button.addEventListener("click", function () {
-            const mood = button.dataset.mood;
-            moodCounts[mood]++;
-            totalMoodClicks++;
-            document.getElementById(`${mood.toLowerCase()}-percent`).textContent =
-                `${Math.round((moodCounts[mood] / totalMoodClicks) * 100)}%`;
-
-            moodNotificationDiv.style.display = "none";
+    function showInputFields() {
+        document.getElementById('input-fields').style.display = 'block';
+        document.getElementById('ok-button').addEventListener('click', function () {
+            const pagesRead = parseInt(document.getElementById('pages-read').value) || 0;
+            const bookmark = parseInt(document.getElementById('bookmark').value) || 0;
+            const subject = document.getElementById('current-subject').textContent;
+            updateTrackingData(subject, pagesRead, bookmark);
+            document.getElementById('input-fields').style.display = 'none';
         });
-    });
-
-    // Initialize the Food Tracker input fields
-    [foodMorningInput, foodAfternoonInput, foodEveningInput].forEach(input => {
-        input.value = localStorage.getItem(input.id) || "Nothing";
-        input.addEventListener("input", function () {
-            localStorage.setItem(input.id, input.value);
-        });
-    });
-
-    // Clear food tracker inputs at the end of the day
-    function resetFoodTracker() {
-        localStorage.removeItem("food-morning");
-        localStorage.removeItem("food-afternoon");
-        localStorage.removeItem("food-evening");
-
-        foodMorningInput.value = "Nothing";
-        foodAfternoonInput.value = "Nothing";
-        foodEveningInput.value = "Nothing";
     }
 
-    // Reset food tracker at midnight
-    const now = new Date();
-    const timeUntilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime();
-    setTimeout(function () {
-        resetFoodTracker();
-        setInterval(resetFoodTracker, 24 * 60 * 60 * 1000); // Reset every 24 hours
-    }, timeUntilMidnight);
+    function updateTrackingData(subject, pagesRead, bookmark) {
+        const totalPages = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-pages`);
+        const totalBookmark = document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-bookmark`);
+        const pagesToday = document.getElementById('pages-today');
 
-    // Initialize schedule on page load
-    initializeSchedule();
+        const currentTotalPages = parseInt(totalPages.textContent) || 0;
+        const currentPagesToday = parseInt(pagesToday.textContent) || 0;
+
+        totalPages.textContent = currentTotalPages + pagesRead;
+        totalBookmark.textContent = bookmark;
+        pagesToday.textContent = currentPagesToday + pagesRead;
+    }
+
+    function startBreakTimer() {
+        let timeLeft = 25 * 60 * 1000; // 25 minutes
+
+        breakTimerInterval = setInterval(() => {
+            timeLeft -= 1000;
+            if (timeLeft <= 0) {
+                clearInterval(breakTimerInterval);
+                document.getElementById('break-time').textContent = '00:00';
+                showBreakNotification();
+            } else {
+                document.getElementById('break-time').textContent = formatTime(timeLeft);
+            }
+        }, 1000);
+    }
+
+    function showBreakNotification() {
+        document.getElementById('break-notification').style.display = 'block';
+        document.getElementById('break-ok-button').addEventListener('click', function () {
+            document.getElementById('break-notification').style.display = 'none';
+            document.getElementById('break-left-timer').style.display = 'block';
+            startBreakLeftTimer();
+            showMoodTracker();
+        });
+    }
+
+    function startBreakLeftTimer() {
+        let timeLeft = 5 * 60 * 1000; // 5 minutes
+
+        breakLeftTimerInterval = setInterval(() => {
+            timeLeft -= 1000;
+            if (timeLeft <= 0) {
+                clearInterval(breakLeftTimerInterval);
+                document.getElementById('break-left-time').textContent = '00:00';
+            } else {
+                document.getElementById('break-left-time').textContent = formatTime(timeLeft);
+            }
+        }, 1000);
+    }
+
+    function showMoodTracker() {
+        document.getElementById('mood-notification').style.display = 'block';
+        document.querySelectorAll('.mood-button').forEach(button => {
+            button.addEventListener('click', function () {
+                const mood = button.getAttribute('data-mood');
+                updateMoodData(mood);
+                document.getElementById('mood-notification').style.display = 'none';
+            });
+        });
+    }
+
+    function updateMoodData(selectedMood) {
+        const moodCounts = {
+            'Motivated': parseInt(document.getElementById('motivated-percent').textContent) || 0,
+            'Depressed': parseInt(document.getElementById('depressed-percent').textContent) || 0,
+            'Creative': parseInt(document.getElementById('creative-percent').textContent) || 0,
+            'Lazy': parseInt(document.getElementById('lazy-percent').textContent) || 0,
+            'Bored': parseInt(document.getElementById('bored-percent').textContent) || 0
+        };
+
+        moodCounts[selectedMood]++;
+        const totalMoods = moodCounts['Motivated'] + moodCounts['Depressed'] + moodCounts['Creative'] + moodCounts['Lazy'] + moodCounts['Bored'];
+
+        document.getElementById('motivated-percent').textContent = Math.round((moodCounts['Motivated'] / totalMoods) * 100);
+        document.getElementById('depressed-percent').textContent = Math.round((moodCounts['Depressed'] / totalMoods) * 100);
+        document.getElementById('creative-percent').textContent = Math.round((moodCounts['Creative'] / totalMoods) * 100);
+        document.getElementById('lazy-percent').textContent = Math.round((moodCounts['Lazy'] / totalMoods) * 100);
+        document.getElementById('bored-percent').textContent = Math.round((moodCounts['Bored'] / totalMoods) * 100);
+    }
+
+    function checkIntervals() {
+        const now = new Date();
+        const currentTime = now.getHours() * 60 + now.getMinutes();
+
+        for (let i = 0; i < intervals.length; i++) {
+            const start = intervals[i].start.split(' ')[0].split(':').map(Number);
+            const end = intervals[i].end.split(' ')[0].split(':').map(Number);
+
+            const startTime = start[0] * 60 + start[1];
+            const endTime = end[0] * 60 + end[1];
+
+            if (currentTime >= startTime && currentTime < endTime) {
+                startInterval(i);
+                break;
+            } else if (i === intervals.length - 1 && currentTime >= endTime) {
+                document.getElementById('interval-time').textContent = 'Not Study Interval';
+                document.getElementById('timer').textContent = '00:00';
+            }
+        }
+    }
+
+    // Initialize the study tracker
+    checkIntervals();
+    setInterval(checkIntervals, 60000); // Check every minute
 });
