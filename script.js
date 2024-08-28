@@ -1,260 +1,175 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // Time intervals and subjects
-    const intervals = [
-        { start: "11:30", end: "13:30" },
-        { start: "14:30", end: "16:30" },
-        { start: "17:30", end: "19:30" },
-        { start: "21:00", end: "23:00" }
+    // Time intervals for study sessions
+    const studyIntervals = [
+        { start: '11:30', end: '13:30', subject: null },
+        { start: '14:30', end: '16:30', subject: null },
+        { start: '17:30', end: '19:30', subject: null },
+        { start: '21:00', end: '23:00', subject: null }
     ];
 
+    // List of subjects
     const subjects = ['Polity', 'Science and Tech', 'Geography', 'Economics', 'History'];
 
-    const permanentTimes = [
-        { start: "04:45", end: "04:45", subject: "Cold Shower" },
-        { start: "05:30", end: "07:00", subject: "Newspaper" }
-    ];
+    // Select elements
+    const intervalTimeElem = document.getElementById('interval-time');
+    const subjectElem = document.getElementById('current-subject');
+    const timerElem = document.getElementById('timer');
+    const breakTimeElem = document.getElementById('break-time');
+    const breakNotification = document.getElementById('break-notification');
+    const breakOkButton = document.getElementById('break-ok-button');
+    const moodNotification = document.getElementById('mood-notification');
+    const okButton = document.getElementById('ok-button');
+    const pagesReadInput = document.getElementById('pages-read');
+    const bookmarkInput = document.getElementById('bookmark');
+    const trackingTable = document.getElementById('tracking-container');
+    const saveFoodButton = document.getElementById('save-food-button');
+    const clearFoodButton = document.getElementById('clear-food-button');
+    const foodInputs = {
+        morning: document.getElementById('morning-food'),
+        afternoon: document.getElementById('afternoon-food'),
+        evening: document.getElementById('evening-food')
+    };
 
-    let currentInterval = null;
-    let timerInterval;
-    let breakTimerInterval;
+    // Load saved data
+    function loadSavedData() {
+        // Load saved study progress
+        const subjectsData = JSON.parse(localStorage.getItem('subjectsData')) || {};
+        Object.keys(subjectsData).forEach(subject => {
+            const data = subjectsData[subject];
+            document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-bookmark`).innerText = data.bookmark || 'N/A';
+            document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-pages`).innerText = data.pagesRead || '0';
+        });
 
-    // Helper function to format time in "Minute:Second" manner
-    function formatTime(seconds) {
-        const mins = String(Math.floor(seconds / 60)).padStart(2, '0');
-        const secs = String(seconds % 60).padStart(2, '0');
-        return `${mins}:${secs}`;
+        // Load saved food tracker
+        const foodData = JSON.parse(localStorage.getItem('foodData')) || {};
+        Object.keys(foodInputs).forEach(meal => {
+            foodInputs[meal].value = foodData[meal] || '';
+        });
+    }
+
+    // Save data
+    function saveData() {
+        const subjectsData = {};
+        subjects.forEach(subject => {
+            subjectsData[subject] = {
+                bookmark: document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-bookmark`).innerText,
+                pagesRead: document.getElementById(`${subject.toLowerCase().replace(/ /g, '-')}-pages`).innerText
+            };
+        });
+        localStorage.setItem('subjectsData', JSON.stringify(subjectsData));
+
+        const foodData = {
+            morning: foodInputs.morning.value,
+            afternoon: foodInputs.afternoon.value,
+            evening: foodInputs.evening.value
+        };
+        localStorage.setItem('foodData', JSON.stringify(foodData));
     }
 
     // Randomize subjects
     function getRandomSubject() {
-        const shuffledSubjects = subjects.sort(() => 0.5 - Math.random());
-        return shuffledSubjects.shift();
+        return subjects[Math.floor(Math.random() * subjects.length)];
     }
 
-    // Save data to local storage
-    function saveToLocalStorage(key, value) {
-        localStorage.setItem(key, JSON.stringify(value));
-    }
-
-    // Load data from local storage
-    function loadFromLocalStorage(key) {
-        const value = localStorage.getItem(key);
-        return value ? JSON.parse(value) : null;
-    }
-
-    // Update Schedule and Timer
-    function updateScheduleAndTimer() {
+    // Start study interval
+    function startStudyInterval() {
         const now = new Date();
-        const nowStr = now.toTimeString().substring(0, 5);
+        let interval = studyIntervals.find(interval => {
+            const start = new Date(`1970-01-01T${interval.start}:00`);
+            const end = new Date(`1970-01-01T${interval.end}:00`);
+            return now >= start && now <= end;
+        });
 
-        // Check permanent times first
-        let matchedPermanentTime = permanentTimes.find(p => p.start === nowStr);
-        if (matchedPermanentTime) {
-            document.getElementById("current-subject").innerText = matchedPermanentTime.subject;
-            document.getElementById("timer").innerText = "";
-            clearInterval(timerInterval);
+        if (!interval) {
+            // No active study interval
+            intervalTimeElem.innerText = 'No active interval';
+            subjectElem.innerText = '';
+            timerElem.innerText = '';
             return;
         }
 
-        // Determine current interval
-        currentInterval = intervals.find(interval => nowStr >= interval.start && nowStr < interval.end);
+        // Randomize subject
+        interval.subject = getRandomSubject();
+        subjectElem.innerText = interval.subject;
 
-        if (currentInterval) {
-            // Randomize subject for the interval
-            const subject = getRandomSubject();
-            document.getElementById("current-subject").innerText = subject;
+        // Set interval timer
+        const [intervalStart, intervalEnd] = [interval.start, interval.end].map(time => new Date(`1970-01-01T${time}:00`));
+        const remainingTime = Math.max(0, intervalEnd - now);
+        const timer = Math.ceil(remainingTime / 1000);
 
-            const endMinutes = parseInt(currentInterval.end.split(':')[0]) * 60 + parseInt(currentInterval.end.split(':')[1]);
-            const nowMinutes = parseInt(nowStr.split(':')[0]) * 60 + parseInt(nowStr.split(':')[1]);
-            let timeLeft = (endMinutes - nowMinutes) * 60;
-
-            // Start the countdown timer
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    document.getElementById("timer").innerText = formatTime(timeLeft);
-                } else {
-                    clearInterval(timerInterval);
-                    document.getElementById("timer").innerText = "00:00";
-                    showBreakNotification();
-                }
-            }, 1000);
-
-        } else {
-            document.getElementById("current-subject").innerText = "Not Study Interval";
-            document.getElementById("timer").innerText = "";
-            clearInterval(timerInterval);
+        function updateTimer() {
+            const minutes = Math.floor(timer / 60);
+            const seconds = timer % 60;
+            timerElem.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timer > 0) {
+                timer--;
+                setTimeout(updateTimer, 1000);
+            }
         }
+
+        updateTimer();
     }
 
-    // Break Timer Setup
-    function showBreakNotification() {
-        document.getElementById("break-notification").style.display = "block";
-        clearInterval(breakTimerInterval);
-    }
+    // Start break timer
+    function startBreakTimer() {
+        const breakTime = 25 * 60; // 25 minutes in seconds
+        let timeLeft = breakTime;
 
-    document.getElementById("break-ok-button").addEventListener("click", function () {
-        document.getElementById("break-notification").style.display = "none";
-        startBreakTimer(5);
-        showMoodNotification();
-    });
-
-    function startBreakTimer(durationMinutes) {
-        let time = durationMinutes * 60;
-        clearInterval(breakTimerInterval);
-        document.getElementById("break-timer").innerText = "Break Left: " + formatTime(time);
-        breakTimerInterval = setInterval(() => {
-            if (time > 0) {
-                time--;
-                document.getElementById("break-timer").innerText = "Break Left: " + formatTime(time);
+        function updateBreakTimer() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            breakTimeElem.innerText = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            if (timeLeft > 0) {
+                timeLeft--;
+                setTimeout(updateBreakTimer, 1000);
             } else {
-                clearInterval(breakTimerInterval);
-                startStudyTimer(25);
+                breakNotification.style.display = 'block';
             }
-        }, 1000);
+        }
+
+        updateBreakTimer();
     }
 
-    function startStudyTimer(durationMinutes) {
-        let time = durationMinutes * 60;
-        document.getElementById("break-timer").innerText = "Next Break: " + formatTime(time);
-        breakTimerInterval = setInterval(() => {
-            if (time > 0) {
-                time--;
-                document.getElementById("break-timer").innerText = "Next Break: " + formatTime(time);
-            } else {
-                clearInterval(breakTimerInterval);
-                showBreakNotification();
-            }
-        }, 1000);
-    }
+    // Set up event listeners
+    okButton.addEventListener('click', function () {
+        const pagesRead = parseInt(pagesReadInput.value) || 0;
+        const bookmark = parseInt(bookmarkInput.value) || 0;
+        const currentSubject = subjectElem.innerText;
 
-    // Mood Tracker
-    let moodData = loadFromLocalStorage("moodData") || {
-        "Motivated": 0,
-        "Depressed": 0,
-        "Creative": 0,
-        "Lazy": 0,
-        "Bored": 0,
-        totalClicks: 0
-    };
+        if (currentSubject) {
+            const subjectData = document.getElementById(`${currentSubject.toLowerCase().replace(/ /g, '-')}-pages`);
+            const totalPages = (parseInt(subjectData.innerText) || 0) + pagesRead;
+            subjectData.innerText = totalPages;
 
-    function showMoodNotification() {
-        document.getElementById("mood-notification").style.display = "block";
-    }
+            const bookmarkData = document.getElementById(`${currentSubject.toLowerCase().replace(/ /g, '-')}-bookmark`);
+            bookmarkData.innerText = bookmark;
+        }
 
-    document.querySelectorAll(".mood-button").forEach(button => {
-        button.addEventListener("click", function () {
-            const mood = this.getAttribute("data-mood");
-            moodData[mood]++;
-            moodData.totalClicks++;
-            saveToLocalStorage("moodData", moodData);
-            updateMoodPercentages();
-            document.getElementById("mood-notification").style.display = "none";
+        saveData();
+        pagesReadInput.value = '';
+        bookmarkInput.value = '';
+        moodNotification.style.display = 'block';
+    });
+
+    breakOkButton.addEventListener('click', function () {
+        breakNotification.style.display = 'none';
+        moodNotification.style.display = 'block';
+    });
+
+    // Event listeners for food tracker buttons
+    saveFoodButton.addEventListener('click', function () {
+        saveData();
+    });
+
+    clearFoodButton.addEventListener('click', function () {
+        Object.keys(foodInputs).forEach(meal => {
+            foodInputs[meal].value = '';
         });
+        saveData();
     });
 
-    function updateMoodPercentages() {
-        for (let mood in moodData) {
-            if (mood !== "totalClicks") {
-                const percentage = ((moodData[mood] / moodData.totalClicks) * 100).toFixed(2) + "%";
-                document.getElementById(mood.toLowerCase() + "-percent").innerText = percentage;
-            }
-        }
-    }
-
-    updateMoodPercentages();
-
-    // Pages Read and Bookmark Recording
-    document.getElementById("ok-button").addEventListener("click", function () {
-        const pagesRead = parseInt(document.getElementById("pages-read").value);
-        const bookmark = parseInt(document.getElementById("bookmark").value);
-
-        if (currentInterval && !isNaN(pagesRead) && !isNaN(bookmark)) {
-            const subject = document.getElementById("current-subject").innerText;
-            let totalPages = loadFromLocalStorage(`${subject.toLowerCase()}-pages`) || 0;
-            totalPages += pagesRead;
-
-            saveToLocalStorage(`${subject.toLowerCase()}-pages`, totalPages);
-            saveToLocalStorage(`${subject.toLowerCase()}-bookmark`, bookmark);
-
-            document.getElementById(`${subject.toLowerCase()}-pages`).innerText = totalPages;
-            document.getElementById(`${subject.toLowerCase()}-bookmark`).innerText = bookmark;
-
-            // Update total pages read today
-            let totalPagesToday = loadFromLocalStorage("totalPagesToday") || 0;
-            totalPagesToday += pagesRead;
-            saveToLocalStorage("totalPagesToday", totalPagesToday);
-            document.getElementById("total-pages-today").innerText = totalPagesToday;
-        }
-
-        // Hide input fields
-        document.getElementById("input-fields").style.display = "none";
-    });
-
-    // Food Tracker
-    function loadFoodData() {
-        const morning = loadFromLocalStorage("morningFood") || "Nothing";
-        const afternoon = loadFromLocalStorage("afternoonFood") || "Nothing";
-        const evening = loadFromLocalStorage("eveningFood") || "Nothing";
-
-        document.getElementById("morning-food").value = morning;
-        document.getElementById("afternoon-food").value = afternoon;
-        document.getElementById("evening-food").value = evening;
-    }
-
-    function saveFoodData() {
-        saveToLocalStorage("morningFood", document.getElementById("morning-food").value || "Nothing");
-        saveToLocalStorage("afternoonFood", document.getElementById("afternoon-food").value || "Nothing");
-        saveToLocalStorage("eveningFood", document.getElementById("evening-food").value || "Nothing");
-    }
-
-    document.getElementById("save-food-button").addEventListener("click", function () {
-        saveFoodData();
-    });
-
-    document.getElementById("clear-food-button").addEventListener("click", function () {
-        document.getElementById("morning-food").value = "";
-        document.getElementById("afternoon-food").value = "";
-        document.getElementById("evening-food").value = "";
-        saveFoodData(); // Save "Nothing" if fields are cleared
-    });
-
-    // Clear food data at the end of the day
-    function clearFoodDataAtEndOfDay() {
-        const now = new Date();
-        const hours = now.getHours();
-        const minutes = now.getMinutes();
-        if (hours === 0 && minutes === 0) {
-            saveToLocalStorage("morningFood", "Nothing");
-            saveToLocalStorage("afternoonFood", "Nothing");
-            saveToLocalStorage("eveningFood", "Nothing");
-        }
-    }
-
-    function loadSavedData() {
-        intervals.forEach(interval => {
-            const subject = interval.subject.toLowerCase();
-            const pages = loadFromLocalStorage(`${subject}-pages`);
-            const bookmark = loadFromLocalStorage(`${subject}-bookmark`);
-
-            if (pages !== null) document.getElementById(`${subject}-pages`).innerText = pages;
-            if (bookmark !== null) document.getElementById(`${subject}-bookmark`).innerText = bookmark;
-        });
-
-        const totalPagesToday = loadFromLocalStorage("totalPagesToday");
-        if (totalPagesToday !== null) {
-            document.getElementById("total-pages-today").innerText = totalPagesToday;
-        }
-
-        loadFoodData();
-    }
-
-    // Initialize
+    // Initial setup
     loadSavedData();
-    updateScheduleAndTimer();
-    setInterval(updateScheduleAndTimer, 60000);  // Update every minute
-
-    // Schedule daily food data clearing
-    setInterval(clearFoodDataAtEndOfDay, 60000);  // Check every minute
+    startStudyInterval();
+    startBreakTimer();
 });
