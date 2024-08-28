@@ -1,123 +1,112 @@
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f4f4;
-    color: #333;
+/* Reset some basic styles */
+body, h2, h3, div {
     margin: 0;
     padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.container {
-    width: 90%;
-    max-width: 600px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin: 15px 0;
-    padding: 20px;
-}
-
-h2 {
-    margin-bottom: 10px;
-    font-size: 1.5em;
-    color: #444;
-}
-
-.study-info, .hidden {
-    margin-bottom: 20px;
-}
-
-p {
-    margin: 8px 0;
-}
-
-label {
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-input[type="number"], input[type="text"] {
-    width: calc(100% - 20px);
-    padding: 8px;
-    margin: 5px 0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
     box-sizing: border-box;
+    font-family: Arial, sans-serif;
 }
 
-button {
-    background-color: #007BFF;
-    color: white;
-    padding: 10px 15px;
-    border: none;
+/* General styling for containers */
+#schedule, #break-manager, #break-notification, #mood-notification {
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
+    background-color: #f9f9f9;
 }
 
-button:hover {
+/* Style for the study progress section */
+#study-progress div {
+    margin-bottom: 5px;
+}
+
+#study-progress h3 {
+    margin-bottom: 10px;
+}
+
+/* Style for the input fields */
+#input-fields {
+    margin-top: 15px;
+}
+
+#input-fields input {
+    margin-right: 10px;
+    padding: 5px;
+    font-size: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    width: 150px;
+}
+
+#input-fields button {
+    padding: 5px 10px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+#input-fields button:hover {
     background-color: #0056b3;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
+/* Style for notifications */
+#break-notification, #mood-notification {
+    text-align: center;
+    padding: 20px;
+    background-color: #ffdd57;
+    border-radius: 5px;
 }
 
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
+#break-notification h2, #mood-notification h2 {
+    margin-bottom: 20px;
 }
 
-th {
-    background-color: #f2f2f2;
+#break-notification button, .mood-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
 }
 
-#break-timer, #break-left-timer {
-    font-size: 2em;
-    color: #d9534f;
+#break-notification button:hover, .mood-button:hover {
+    background-color: #218838;
+}
+
+/* Mood percentage display */
+#mood-percentages div {
+    margin-top: 10px;
+}
+
+#mood-percentages span {
     font-weight: bold;
 }
 
-#motivated, #depressed, #creative, #lazy, #bored {
-    background-color: #f2f2f2;
-    color: #333;
-    padding: 10px 15px;
-    margin: 5px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    cursor: pointer;
-}
-
-#motivated:hover, #depressed:hover, #creative:hover, #lazy:hover, #bored:hover {
-    background-color: #ddd;
-}
-
+/* Responsive design adjustments */
 @media (max-width: 600px) {
-    h2 {
-        font-size: 1.2em;
+    #input-fields input {
+        width: 100%;
+        margin-bottom: 10px;
     }
 
-    #break-timer, #break-left-timer {
-        font-size: 1.5em;
-    }
-
-    .container {
-        padding: 15px;
-    }
-
-    table, th, td {
-        font-size: 0.9em;
-    }
-
-    input[type="number"], input[type="text"] {
+    #input-fields button {
         width: 100%;
     }
 
-    button {
-        padding: 8px 12px;
+    #study-progress {
+        font-size: 0.9rem;
+    }
+
+    #break-timer, #timer {
+        font-size: 1.2rem;
+    }
+
+    #break-notification, #mood-notification {
+        padding: 15px;
     }
 }
